@@ -1,24 +1,33 @@
+// elden-js.ts
 export interface AccessResponse {
   accessStatus: boolean;
   message: string;
 }
 
+export interface RequestWithCookies {
+  cookies: {
+    get: (name: string) => { value: string } | undefined;
+  };
+}
+
 /**
- * Server-side access verification
- * Only needs the cookie value, no framework dependencies
+ * Generic server-side access verification
+ * Works with any server framework that has req.cookies.get()
  */
 export const verifyAccess = async (
   backendURL: string,
   cookieName: string,
-  cookieValue: string
+  req: RequestWithCookies
 ): Promise<AccessResponse> => {
   try {
+    const cookieValue = req.cookies.get(cookieName)?.value || "";
+    console.log(cookieValue);
+
     const res = await fetch(backendURL, {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
-        "X-Cookie-Name": cookieName,
-        "X-Cookie-Value": cookieValue,
+        Cookie: `${cookieName}=${cookieValue}`,
       },
     });
 
