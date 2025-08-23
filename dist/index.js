@@ -2,7 +2,6 @@
 var verifyAccess = async (backendURL, cookieName, req) => {
   try {
     const cookieValue = req.cookies.get(cookieName)?.value || "";
-    console.log(cookieValue);
     const res = await fetch(backendURL, {
       method: "GET",
       headers: {

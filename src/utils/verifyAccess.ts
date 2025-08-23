@@ -1,4 +1,3 @@
-// elden-js.ts
 export interface AccessResponse {
   accessStatus: boolean;
   message: string;
