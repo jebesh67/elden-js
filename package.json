@@ -1,0 +1,27 @@
+{
+  "name": "elden-js",
+  "version": "1.0.0",
+  "description": "Frontend JS/TS library for access control using HttpOnly JWT cookies",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsup src/index.ts --format cjs,esm --dts",
+    "dev": "tsup src/index.ts --watch",
+    "test": "echo \"No tests yet\" && exit 0"
+  },
+  "keywords": [
+    "elden",
+    "auth",
+    "jwt",
+    "frontend",
+    "typescript",
+    "js"
+  ],
+  "author": "Your Name",
+  "license": "MIT",
+  "type": "module",
+  "devDependencies": {
+    "tsup": "^8.5.0",
+    "typescript": "^5.9.2"
+  }
+}
