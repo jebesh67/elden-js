@@ -14,6 +14,8 @@ type RateLimitResult = {
   remaining: number;
   resetIn: number;
   ip: string;
+  message: string;
+  error?: boolean;
 };
 
 let redis: Redis | null = null;
@@ -45,19 +47,35 @@ export const rateControl = async (
   const { limit, window } = options;
   const key = `rate:${ip}`;
   
-  const r = getRedis(options);
-  
-  const requests = await r.incr(key);
-  if (requests === 1) {
-    await r.expire(key, window);
+  try {
+    const r = getRedis(options);
+    
+    // test Redis connectivity
+    await r.ping();
+    
+    const requests = await r.incr(key);
+    if (requests === 1) {
+      await r.expire(key, window);
+    }
+    
+    const ttl = await r.ttl(key);
+    
+    return {
+      allowed: requests <= limit,
+      remaining: Math.max(limit - requests, 0),
+      resetIn: ttl,
+      ip,
+      message: `Redis connected, rate limiting works`,
+    };
+  } catch (err) {
+    console.warn("Redis not available:", err);
+    return {
+      allowed: false,
+      remaining: 0,
+      resetIn: 0,
+      ip,
+      error: true,
+      message: "Redis not connected, rate limiting unavailable",
+    };
   }
-  
-  const ttl = await r.ttl(key);
-  
-  return {
-    allowed: requests <= limit,
-    remaining: Math.max(limit - requests, 0),
-    resetIn: ttl,
-    ip,
-  };
 };
