@@ -9,10 +9,6 @@ export interface RequestWithCookies {
   };
 }
 
-/**
- * Generic server-side access verification
- * Works with any server framework that has req.cookies.get()
- */
 export const verifyAccess = async (
   backendURL: string,
   cookieName: string,
