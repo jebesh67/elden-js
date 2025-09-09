@@ -63,12 +63,22 @@ export const rateControl = async (
     
     const ttl = await r.ttl(key);
     
+    if (requests > limit) {
+      return {
+        allowed: false,
+        remaining: 0,
+        resetIn: ttl,
+        ip,
+        message: `Rate limit exceeded. Try again in ${ttl} seconds.`,
+      };
+    }
+    
     return {
-      allowed: requests <= limit,
-      remaining: Math.max(limit - requests, 0),
+      allowed: true,
+      remaining: limit - requests,
       resetIn: ttl,
       ip,
-      message: "Redis connected, rate limiting works",
+      message: "Request allowed.",
     };
   } catch (err) {
     console.warn("Redis not available:", err);
