@@ -31,3 +31,6 @@ yarn-error.log*
 
 # Optional: coverage folder if you run tests
 coverage/
+
+#others
+.idea
