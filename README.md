@@ -1,87 +1,112 @@
-**elden-js**
-* A lightweight library to protect frontend routes in Node.js apps by verifying cookies or tokens on the server.
+# elden-js
 
-* Works with Next.js, Express, or any Node.js server.
+[![npm version](https://img.shields.io/npm/v/elden-js)](https://www.npmjs.com/package/elden-js)
+[![License](https://img.shields.io/npm/l/elden-js)](LICENSE)
 
------------------------------------------------------------------------------
+**Lightweight library to protect frontend routes and rate-limit requests in Node.js apps.**
 
-**Installation**
+- Protect frontend routes by verifying cookies or tokens (`verifyAccess`).
+- Rate-limit requests using Redis (`rateControl`).
+- Works with **Next.js**, **Express**, or any Node.js server.
+
+---
+
+## Installation
+
+```
 npm install elden-js
+```
+___
 
------------------------------------------------------------------------------
+## verifyAccess
+Verify access to a route by checking a cookie or token with your backend.
 
-**Usage**
-Protect a frontend route (Next.js middleware example)
-import { NextRequest, NextResponse } from "next/server";
+<details> <summary>Usage (Next.js example)</summary>
+
+````
 import { verifyAccess, RequestWithCookies } from "elden-js";
 
-const protectedPaths = ["/yourPage"];
-const backendURL = "http://yourBackend";
-const cookieName = "yourCookieName";
+const typedReq = req as unknown as RequestWithCookies;
 
-export async function middleware(req: NextRequest) {
-  if (protectedPaths.some(path => req.nextUrl.pathname.startsWith(path))) {
-    // the TypeScript type comes with the package
-    const typedReq = req as unknown as RequestWithCookies;
+const access = await verifyAccess(
+  "http://yourBackend",
+  "tokenName",
+  typedReq
+);
 
-    // *the backend should return accessStatus: true || false*
-    const access = await verifyAccess(backendURL, cookieName, typedReq);
-
-    if (!access.accessStatus) {
-      return NextResponse.redirect(new URL("/login", req.url));
-    }
-  }
-
-  return NextResponse.next();
+if (!access.accessStatus) {
+  // redirect or deny access
 }
+````
 
-export const config = {
-  matcher: ["/yourPage/:path*"],
-};
+</details> <details> <summary>Returns</summary>
 
------------------------------------------------------------------------------
-
-**Returned Data**
-*verifyAccess returns a promise with the following structure:*
-
-interface AccessResponse {
-  accessStatus: boolean; // true if access is allowed, false if denied
-  message: string;       // explanatory message ("Access granted" or "Access denied")
+````
+{
+  accessStatus: boolean, // true if access is allowed
+  message: string        // "Access granted" or "Access denied"
 }
+````
 
------------------------------------------------------------------------------
+</details>
 
-**Example:**
-const access = await verifyAccess(backendURL, "token", typedReq);
+**Notes:**
+- Backend must return ***{ accessStatus: boolean }*** after verifying the token.
 
-console.log(access.accessStatus); *// true or false*
-console.log(access.message);      *// "Access granted" or "Access denied"*
+- ***{ message: string }*** is optional but can provide context.
+___
 
------------------------------------------------------------------------------
+## rateControl
 
-**Note**
-* Works with any server framework that has req.cookies.get()
+Limit the number of requests per IP using Redis.
 
-* Cookies containing the token are sent automatically to your backend. On the server, you can read the cookie value depending on your framework:
+<details> <summary>Usage (Node.js/Express example)</summary>
 
-  - **Express:** `const token = req.cookies['token'];`
-  - Validate the token in your backend and return the json() as mentioned below
+````
+import { rateControl, RateControlRequest, RateLimitOptions } from "elden-js";
 
-* Backend should always return accessStatus: boolean value as json();
+const options: RateLimitOptions = { limit: 5, window: 10 }; // 5 requests per 10 seconds
+const typedReq: RateControlRequest = { ip: req.ip, headers: req.headers };
 
-* You can also send a message as json which is optional
+const result = await rateControl(typedReq, options);
 
------------------------------------------------------------------------------
+if (!result.allowed) {
+  // handle rate limit exceeded
+}
+````
 
-**Summary**
-* Protect frontend routes easily by verifying cookies server-side.
+</details> <details> <summary>Returns</summary>
 
-* Minimal setup: just provide the *backend url + cookie name + request object*.
+````
+{
+  allowed: boolean,   // true if request allowed
+  remaining: number,  // requests left in the window
+  resetIn: number,    // seconds until window resets
+  ip: string,
+  message: string,
+  error?: boolean     // true if Redis not connected
+}
+````
 
-* Works anywhere in Node.js — Next.js, Express, or custom servers.
+</details>
 
-* Hoping to make more updates and support more complex data and keep things simplified
+**Notes:**
 
-* Email me at **jebesh67@gmail.com** for queries and suggestions
+- Requires a running Redis server.
 
------------------------------------------------------------------------------
+- Optional Redis settings: redisHost, redisPort, redisPassword.
+
+- If Redis is unavailable, ***error: true*** is returned so you can handle it manually.
+___
+
+## Summary
+
+- Minimal setup: just pass the request and required options.
+
+- Works anywhere in Node.js — Next.js, Express, or custom servers.
+
+- Provides frontend route protection and IP rate limiting with simple configuration.
+___
+
+**Contact:** For questions or suggestions: `jebesh67@gmail.com`
+___
