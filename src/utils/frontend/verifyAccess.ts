@@ -15,7 +15,7 @@ export const verifyAccess = async (
   req: RequestWithCookies
 ): Promise<AccessResponse> => {
   try {
-    const cookieValue = req.cookies.get(cookieName)?.value || "";
+    const cookieValue = req.cookies.get(cookieName)?.value ?? "";
 
     const res = await fetch(backendURL, {
       method: "GET",
