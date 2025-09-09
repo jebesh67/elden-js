@@ -12,8 +12,13 @@
   "keywords": [
     "elden",
     "auth",
+    "auth control",
+    "rate limiting",
     "jwt",
+    "redis",
+    "simplified",
     "frontend",
+    "backend",
     "typescript",
     "js"
   ],
