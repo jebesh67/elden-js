@@ -1,22 +1,26 @@
-import type { Request } from "express";
 import Redis from "ioredis";
 
-type RateLimitOptions = {
+export interface RateLimitOptions {
   limit: number;
   window: number;
   redisHost?: string;
   redisPort?: number;
   redisPassword?: string;
-};
+}
 
-type RateLimitResult = {
+export interface RateLimitResult {
   allowed: boolean;
   remaining: number;
   resetIn: number;
   ip: string;
   message: string;
   error?: boolean;
-};
+}
+
+export interface RateControlRequest {
+  ip?: string;
+  headers: Record<string, string | string[] | undefined>;
+}
 
 let redis: Redis | null = null;
 
@@ -36,7 +40,7 @@ const getRedis = (options: RateLimitOptions): Redis => {
 };
 
 export const rateControl = async (
-  req: Request,
+  req: RateControlRequest,
   options: RateLimitOptions
 ): Promise<RateLimitResult> => {
   const ip =
@@ -50,7 +54,6 @@ export const rateControl = async (
   try {
     const r = getRedis(options);
     
-    // test Redis connectivity
     await r.ping();
     
     const requests = await r.incr(key);
@@ -65,7 +68,7 @@ export const rateControl = async (
       remaining: Math.max(limit - requests, 0),
       resetIn: ttl,
       ip,
-      message: `Redis connected, rate limiting works`,
+      message: "Redis connected, rate limiting works",
     };
   } catch (err) {
     console.warn("Redis not available:", err);
