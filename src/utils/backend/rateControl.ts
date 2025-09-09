@@ -18,12 +18,16 @@ type RateLimitResult = {
 
 let redis: Redis | null = null;
 
-const getRedis = (options: RateLimitOptions) => {
+const getRedis = (options: RateLimitOptions): Redis => {
   if (!redis) {
     redis = new Redis({
       host: options.redisHost || "127.0.0.1",
       port: options.redisPort || 6379,
       password: options.redisPassword,
+    });
+    
+    redis.on("error", (err) => {
+      console.warn("Redis error:", err);
     });
   }
   return redis;
