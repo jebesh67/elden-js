@@ -24,11 +24,12 @@ Verify access to a route by checking a cookie or token with your backend.
 <details> <summary>Usage (Next.js example)</summary>
 
 ````
-import { verifyAccess, RequestWithCookies } from "elden-js";
+import { verifyAccess, RequestWithCookies, AccessResponse } from "elden-js/frontend";
 
 const typedReq = req as unknown as RequestWithCookies;
+// or just pass the plain rrequest [ verifyAccess(backendURL, tokenName, req) ]
 
-const access = await verifyAccess(
+const access: AccessResponse = await verifyAccess(
   "http://yourBackend",
   "tokenName",
   typedReq
@@ -63,22 +64,45 @@ Limit the number of requests per IP using Redis.
 <details> <summary>Usage (Node.js/Express example)</summary>
 
 ````
-import { rateControl, RateControlRequest, RateLimitOptions } from "elden-js";
+import { rateControl, RateControlRequest, RateLimitResult, RateLimitOptions } from "elden-js/backend";
 
 const options: RateLimitOptions = { limit: 5, window: 10 }; // 5 requests per 10 seconds
-const typedReq: RateControlRequest = { ip: req.ip, headers: req.headers };
+// options can have redisHost, redisPort, redisPassword which are optional
+// read Configuration for more info on RateLimitOptions
 
-const result = await rateControl(typedReq, options);
+// can just pass the plain request, typedRequest is optional
+// const typedReq: RateControlRequest = { ip: req.ip (or) headers: req.headers };
+
+const result: RateLimitResult = await rateControl(req, options);
 
 if (!result.allowed) {
   // handle rate limit exceeded
 }
+
+// if redis is not connected it will return an error: true
+if (result.error) {
+// console.error("Redis not connected")
+}
 ````
+
+</details> <details> <summary>Configuration</summary>
+
+````
+export interface RateLimitOptions {
+  limit: number;       // max number of allowed requests per IP
+  window: number;      // in seconds example 10 for 10 seconds
+  redisHost?: string;  // your live redis host url, if not provided runs on 127.0.0.1(localHost)
+  redisPort?: number;  // if not provided runs on 6379
+  redisPassword?: string;
+}
+````
+
+
 
 </details> <details> <summary>Returns</summary>
 
 ````
-{
+export interface RateLimitResult {
   allowed: boolean,   // true if request allowed
   remaining: number,  // requests left in the window
   resetIn: number,    // seconds until window resets
@@ -103,9 +127,9 @@ ___
 
 - Minimal setup: just pass the request and required options.
 
-- Works anywhere in Node.js — Next.js, Express, or custom servers.
+- ***rateControl*** works in any Node.js server, ***verifyAccess*** is supposed to work on frontend middlewares
 
-- Provides frontend route protection and IP rate limiting with simple configuration.
+- Provides frontend route protection and IP rate limiting with simple configuration for Node.js.
 ___
 
 **Contact:** For questions or suggestions: `jebesh67@gmail.com`
