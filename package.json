@@ -2,22 +2,30 @@
   "name": "elden-js",
   "version": "1.1.5",
   "description": "Simplified middleware library for JS/TS",
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
+  "main": "dist/frontend-entry.js",
+  "types": "dist/frontend-entry.d.ts",
   "files": [
     "dist",
     "README.md",
     "LICENSE"
   ],
   "scripts": {
-    "build": "tsup src/index.ts src/backend-entry.ts --format cjs,esm --dts",
-    "dev": "tsup src/index.ts src/backend-entry.ts --watch",
+    "build": "tsup src/frontend-entry.ts src/backend-entry.ts --format cjs,esm --dts",
+    "dev": "tsup src/frontend-entry.ts src/backend-entry.ts --watch",
     "test": "echo \"No tests yet\" && exit 0"
   },
   "exports": {
-    ".": "./dist/index.js",
-    "./backend-entry": "./dist/backend-entry.js"
+    "./frontend": {
+      "import": "./dist/frontend-entry.js",
+      "require": "./dist/frontend-entry.cjs"
+    },
+    "./backend": {
+      "import": "./dist/backend-entry.js",
+      "require": "./dist/backend-entry.cjs"
+    }
   },
+
+
   "keywords": [
     "elden",
     "auth",
