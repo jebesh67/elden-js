@@ -1,6 +1,6 @@
 {
   "name": "elden-js",
-  "version": "1.1.8",
+  "version": "1.2.0",
   "description": "Simplified middleware library for JS/TS",
   "main": "dist/frontend-entry.js",
   "types": "dist/frontend-entry.d.ts",
@@ -12,7 +12,9 @@
   "scripts": {
     "build": "tsup src/frontend-entry.ts src/backend-entry.ts --format cjs,esm --dts",
     "dev": "tsup src/frontend-entry.ts src/backend-entry.ts --watch",
-    "test": "echo \"No tests yet\" && exit 0"
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage"
   },
   "exports": {
     "./frontend": {
@@ -45,10 +47,16 @@
     "node": ">=18"
   },
   "devDependencies": {
+    "@types/jest": "^30.0.0",
+    "jest": "^30.1.3",
+    "ts-jest": "^29.4.1",
+    "ts-node": "^10.9.2",
     "tsup": "^8.5.0",
     "typescript": "^5.9.2"
   },
   "dependencies": {
+    "@types/node": "^24.4.0",
+    "elden-js": "^1.1.8",
     "ioredis": "^5.7.0"
   }
 }

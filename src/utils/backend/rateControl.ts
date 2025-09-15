@@ -1,4 +1,11 @@
 import Redis from "ioredis";
+import { Socket } from "net";
+
+export interface RateControlRequest {
+  ip?: string;
+  headers: Record<string, string | string[] | undefined>;
+  socket?: Socket;
+}
 
 export interface RateLimitOptions {
   limit: number;
@@ -6,6 +13,7 @@ export interface RateLimitOptions {
   redisHost?: string;
   redisPort?: number;
   redisPassword?: string;
+  trustProxy?: boolean;
 }
 
 export interface RateLimitResult {
@@ -15,11 +23,6 @@ export interface RateLimitResult {
   ip: string;
   message: string;
   error?: boolean;
-}
-
-export interface RateControlRequest {
-  ip?: string;
-  headers: Record<string, string | string[] | undefined>;
 }
 
 let redis: Redis | null = null;
@@ -39,21 +42,49 @@ const getRedis = (options: RateLimitOptions): Redis => {
   return redis;
 };
 
+const getClientIP = (req: RateControlRequest, trustProxy?: boolean): string => {
+  if (trustProxy) {
+    if (req.ip) return req.ip;
+    if (req.socket?.remoteAddress) return req.socket.remoteAddress;
+  } else {
+    const xForwardedFor = req.headers["x-forwarded-for"];
+    if (typeof xForwardedFor === "string") {
+      const ip = xForwardedFor.split(",")[0].trim();
+      if (ip) return ip;
+    } else if (Array.isArray(xForwardedFor) && xForwardedFor.length > 0) {
+      return xForwardedFor[0].trim();
+    }
+    
+    if (req.ip) return req.ip;
+    if (req.socket?.remoteAddress) return req.socket.remoteAddress;
+  }
+  
+  return "unknown";
+};
+
+
 export const rateControl = async (
   req: RateControlRequest,
   options: RateLimitOptions
 ): Promise<RateLimitResult> => {
-  const ip =
-    req.ip ||
-    (req.headers["x-forwarded-for"] as string)?.split(",")[0]?.trim() ||
-    "unknown";
+  const ip = getClientIP(req, options.trustProxy);
+  
+  if (!ip || ip === "unknown") {
+    return {
+      allowed: false,
+      remaining: 0,
+      resetIn: 0,
+      ip: "unknown",
+      error: true,
+      message: "IP is undefined, cannot apply rate limiting",
+    };
+  }
   
   const { limit, window } = options;
   const key = `rate:${ip}`;
   
   try {
     const r = getRedis(options);
-    
     await r.ping();
     
     const requests = await r.incr(key);
@@ -92,3 +123,4 @@ export const rateControl = async (
     };
   }
 };
+
