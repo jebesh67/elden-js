@@ -1,6 +1,6 @@
 {
   "name": "elden-js",
-  "version": "1.1.5",
+  "version": "1.1.6",
   "description": "Simplified middleware library for JS/TS",
   "main": "dist/frontend-entry.js",
   "types": "dist/frontend-entry.d.ts",
@@ -24,8 +24,6 @@
       "require": "./dist/backend-entry.cjs"
     }
   },
-
-
   "keywords": [
     "elden",
     "auth",
